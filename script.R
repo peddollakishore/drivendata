@@ -1,4 +1,4 @@
 # Test code
 
-a<-rnorm(100)
+a<-rnorm(1000)
 plot(a)
