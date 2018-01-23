@@ -1,4 +1,2 @@
-# Test code
-
-a<-rnorm(1000)
-plot(a)
+# Importing data
+A_hhold_train<-read.csv('A_hhold_train.csv')
