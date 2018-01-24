@@ -39,3 +39,21 @@ MultiLogLoss(pred,train_com$poor)
 
 test_com$poor<-predict(fit,test_com,type = 'prob')
 
+
+
+
+
+a_hhold_train<-read.csv('A_hhold_train.csv')
+a_indiv_train<-read.csv('A_indiv_train.csv')
+
+test<-a_indiv_train[,1:3]
+head(test)
+library(tidyr)
+names(a_indiv_train)
+data_wide <- spread(a_indiv_train, iid, id)
+names(a_indiv_train[-c(1,2)])
+
+library(reshape2)
+data_wide <- dcast(a_indiv_train, id  ~ HeUgMnzF+CaukPfUC+MzEtIdUF,value.var="iid")
+
+
