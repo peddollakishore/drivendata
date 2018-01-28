@@ -1,6 +1,7 @@
 # reqired librarys
 library(dummies)
 library(caret)
+library(reshape2)
 library(MLmetrics)
 library(randomForest)
 # Importing data
@@ -45,15 +46,38 @@ test_com$poor<-predict(fit,test_com,type = 'prob')
 
 a_hhold_train<-read.csv('A_hhold_train.csv')
 a_indiv_train<-read.csv('A_indiv_train.csv')
-
-test<-a_indiv_train[,1:3]
-head(test)
-library(tidyr)
+a_indiv_test<-read.csv('A_indiv_test.csv')
 names(a_indiv_train)
-data_wide <- spread(a_indiv_train, iid, id)
-names(a_indiv_train[-c(1,2)])
+set.seed(1234)
+head(data_HeUgMnzF)
+sum(is.na(a_indiv_train))
+a_indiv_train[is.na(a_indiv_train)]<-0
+fit <- randomForest(as.factor(poor) ~ ., data=a_indiv_train[-c(1,2,44)],keep.forest=TRUE ,importance=TRUE,ntree=200)
+varImp(fit)
+varImpPlot(fit)
+to.remove<-c(which(data.frame(fit$importance)$MeanDecreaseAccuracy==min(data.frame(fit$importance)$MeanDecreaseAccuracy)))
 
+var.predict<-paste(names(a_indiv_train[-c(1,2,43,44)])[-c(43,to.remove)],collapse="+")
+names(a_indiv_train)
+rf.form <- as.formula(paste(names(a_indiv_train)[43], var.predict, sep = " ~ "))
+
+names(a_indiv_train[,-c(1:2)])
+paste(names(a_indiv_train[,-c(1:2)]), collapse = '+')
+
+write.csv(names(a_indiv_train),'names.csv',row.names = F)
 library(reshape2)
-data_wide <- dcast(a_indiv_train, id  ~ HeUgMnzF+CaukPfUC+MzEtIdUF,value.var="iid")
+head(a_indiv_train)
++gtnNTNam
++CaukPfUC
++MzEtIdUF
+data_HeUgMnzF <- dcast (a_indiv_train , id ~ HeUgMnzF , value.var="iid")
 
+data_HeUgMnzF<- dcast(a_indiv_train, id  ~ HeUgMnzF,value.var="iid")
+data_CaukPfUC<- dcast(a_indiv_train, id  ~ CaukPfUC,value.var="iid")
+data_MzEtIdUF<- dcast(a_indiv_train, id  ~ MzEtIdUF,value.var="iid")
+data_gtnNTNam<- dcast(a_indiv_train, id  ~ gtnNTNam,value.var="iid")
+data_SWoXNmPc<- dcast(a_indiv_train, id  ~ SWoXNmPc,value.var="iid")
 
+table(a_indiv_train$gtnNTNam)
+head(data_w)
+str(a_indiv_train)
