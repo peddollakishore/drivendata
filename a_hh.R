@@ -215,3 +215,5 @@ fit <- randomForest(as.factor(poor) ~ ., data=a_train_com[-1],keep.forest=TRUE ,
 #varImpPlot(fit)
 pred <- predict(fit,a_train_com,type="prob")
 MultiLogLoss(pred,a_train_com$poor)
+
+
