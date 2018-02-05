@@ -1,4 +1,8 @@
 library(reshape2)
+library(dummies)
+library(caret)
+library(MLmetrics)
+library(randomForest)
 
 a_hhold_train<-read.csv('A_hhold_train.csv')
 a_indiv_train<-read.csv('A_indiv_train.csv')
@@ -96,15 +100,13 @@ a_train_con<-a_train[,a_train_con]
 y<-data.frame(poor=a_train$poor)
 a_train_dum<-dummy.data.frame(a_train_cat[-157])
 a_train_com<-cbind(a_train_con,a_train_dum,y)
-
-
+tail(names(a_train_com))
 nearZeroVar(a_train_com[-c(1,1133)])
 
 
 if (length(nearZeroVar(a_train_com[-c(1,1133)])) > 0) {
   a_train_com <- a_train_com[, -nearZeroVar(a_train_com)] 
 }
-
 rm(a_indiv_train);rm(a_hhold_train);rm(a_train);rm(a_train_cat);rm(a_train_con);rm(a_train_dum);rm(y)
 
 a_hhold_test<-read.csv('A_hhold_test.csv')
@@ -211,9 +213,58 @@ rm(a_indiv_test);rm(a_hhold_test);rm(a_test);rm(a_test_cat);rm(a_test_con);rm(a_
 
 # RandomForest Model building ----------------------------------------------------------
 set.seed(1234)
-fit <- randomForest(as.factor(poor) ~ ., data=a_train_com[-1],keep.forest=TRUE ,importance=TRUE,ntree=200)
+fit <- randomForest(poor ~ ., data=a_train_com[-1],keep.forest=TRUE ,importance=TRUE,ntree=200)
+
+library(e1071)
+fit<-svm(poor ~ ., data=a_train_com[-1],probability=TRUE)
 #varImpPlot(fit)
-pred <- predict(fit,a_train_com,type="prob")
+pred <- predict(fit,a_train_com,probability=TRUE)
+MultiLogLoss(pred,a_train_com$poor)
+library(rpart)
+class(a_train_com$poor)
+a_train_com$poor<-ifelse(a_train_com$poor=="True",1,0)
+fit<-glm(poor ~ ., data=a_train_com[-1],family = 'binomial')
+pred <- predict(fit,a_train_com,type="response")
+pred<-ifelse(pred>0.5,1,0)
+pred<-as.factor(pred)
+table(pred)
 MultiLogLoss(pred,a_train_com$poor)
 
+###########################################################################
+tail(names(a_train_com))
+prin_comp <- prcomp(a_train_com[,-c(1,578)], scale. = T)
+std_dev <- prin_comp$sdev
+pr_var <- std_dev^2
+pr_var[1:10]
 
+prop_varex <- pr_var/sum(pr_var)
+prop_varex[1:20]
+
+plot(prop_varex, xlab = "Principal Component",
+     ylab = "Proportion of Variance Explained",
+     type = "b")
+
+plot(cumsum(prop_varex), xlab = "Principal Component",
+     ylab = "Cumulative Proportion of Variance Explained",
+     type = "b")
+
+
+train_data <- data.frame(poor = a_train_com$poor, prin_comp$x)
+train_data <- train_data[,1:280]
+table(train_data$poor)
+train_data$poor<-ifelse(train_data$poor=="True",1,0)
+train_data$poor<-as.factor(train_data$poor)
+
+fit<-glm(poor~.,data = train_data,family = 'binomial')
+
+
+test_data <- predict(prin_comp, newdata = a_test_com)
+test_data <- as.data.frame(test_data)
+
+test_data <- test_data[,1:280]
+pred<-predict(fit,test_data,type = 'response')
+
+A_subm<-data.frame(id=a_hhold_test$id,country=a_hhold_test$country,poor=pred)
+write.csv(A_subm,'a_submit.csv',row.names = F)
+MultiLogLoss(pred,train_data$poor)
+head(test_data)

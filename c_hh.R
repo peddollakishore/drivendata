@@ -224,7 +224,7 @@ c_test_con<-c_test[,c_test_con]
 c_test_dum<-dummy.data.frame(c_test_cat)
 c_test_com<-cbind(c_test_con,c_test_dum)
 
-rm(c_indiv_test);rm(c_hhold_test);rm(c_test);rm(c_test_cat);rm(c_test_con);rm(c_test_dum)
+#rm(c_indiv_test);rm(c_hhold_test);rm(c_test);rm(c_test_cat);rm(c_test_con);rm(c_test_dum)
 
 # RandomForest Model building ----------------------------------------------------------
 set.seed(1234)
@@ -233,3 +233,46 @@ fit <- randomForest(as.factor(poor) ~ ., data=c_train_com[-1],keep.forest=TRUE ,
 #varImpPlot(fit)
 pred <- predict(fit,c_train_com,type="prob")
 MultiLogLoss(pred,c_train_com$poor)
+
+
+##########################################################################################
+
+
+sum(is.na(c_train_com))
+#b_train_com[is.na(b_train_com)]<-0
+tail(names(c_train_com))
+prin_comp <- prcomp(c_train_com[,-c(1,512)], scale. = T)
+std_dev <- prin_comp$sdev
+pr_var <- std_dev^2
+pr_var[1:10]
+
+prop_varex <- pr_var/sum(pr_var)
+prop_varex[1:20]
+
+plot(prop_varex, xlab = "Principal Component",
+     ylab = "Proportion of Variance Explained",
+     type = "b")
+
+plot(cumsum(prop_varex), xlab = "Principal Component",
+     ylab = "Cumulative Proportion of Variance Explained",
+     type = "b")
+
+
+train_data <- data.frame(poor = c_train_com$poor, prin_comp$x)
+train_data <- train_data[,1:321]
+table(train_data$poor)
+train_data$poor<-ifelse(train_data$poor=="True",1,0)
+train_data$poor<-as.factor(train_data$poor)
+
+fit<-glm(poor~.,data = train_data,family = 'binomial')
+
+test_data <- predict(prin_comp, newdata = c_test_com)
+test_data <- as.data.frame(test_data)
+
+test_data <- test_data[,1:321]
+pred<-predict(fit,test_data,type = 'response')
+
+C_subm<-data.frame(id=c_hhold_test$id,country=c_hhold_test$country,poor=pred)
+write.csv(C_subm,'c_submit.csv',row.names = F)
+MultiLogLoss(pred,train_data$poor)
+head(test_data)

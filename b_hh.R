@@ -481,6 +481,10 @@ nearZeroVar(b_train_com[-c(1,3069)])
 if (length(nearZeroVar(b_train_com[-c(1,3069)])) > 0) {
   b_train_com <- b_train_com[, -nearZeroVar(b_train_com)] 
 }
+sum(is.na(b_train_com))
+colSums(is.na(b_train_com))
+
+b_train_com <- b_train_com[lapply(b_train_com, function(x) sum(is.na(x)) / length(x) ) < 0.1 ]
 
 rm(b_indiv_train);rm(b_hhold_train);rm(b_train);rm(b_train_cat);rm(b_train_con);rm(b_train_dum);rm(y)
 
@@ -966,3 +970,45 @@ fit <- randomForest(as.factor(poor) ~ ., data=b_train_com[-1],keep.forest=TRUE ,
 #varImpPlot(fit)
 pred <- predict(fit,b_train_com,type="prob")
 MultiLogLoss(pred,b_train_com$poor)
+
+
+###################################################################################
+sum(is.na(b_train_com))
+b_train_com[is.na(b_train_com)]<-0
+tail(names(b_train_com))
+prin_comp <- prcomp(b_train_com[,-c(1,1285)], scale. = T)
+std_dev <- prin_comp$sdev
+pr_var <- std_dev^2
+pr_var[1:10]
+
+prop_varex <- pr_var/sum(pr_var)
+prop_varex[1:20]
+
+plot(prop_varex, xlab = "Principal Component",
+     ylab = "Proportion of Variance Explained",
+     type = "b")
+
+plot(cumsum(prop_varex), xlab = "Principal Component",
+     ylab = "Cumulative Proportion of Variance Explained",
+     type = "b")
+
+
+train_data <- data.frame(poor = b_train_com$poor, prin_comp$x)
+train_data <- train_data[,1:651]
+table(train_data$poor)
+train_data$poor<-ifelse(train_data$poor=="True",1,0)
+train_data$poor<-as.factor(train_data$poor)
+
+fit<-glm(poor~.,data = train_data,family = 'binomial')
+
+
+test_data <- predict(prin_comp, newdata = b_test_com)
+test_data <- as.data.frame(test_data)
+
+test_data <- test_data[,1:651]
+pred<-predict(fit,test_data,type = 'response')
+
+B_subm<-data.frame(id=b_hhold_test$id,country=b_hhold_test$country,poor=pred)
+write.csv(B_subm,'b_submit.csv',row.names = F)
+MultiLogLoss(pred,train_data$poor)
+head(test_data)
