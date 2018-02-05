@@ -224,7 +224,7 @@ c_test_con<-c_test[,c_test_con]
 c_test_dum<-dummy.data.frame(c_test_cat)
 c_test_com<-cbind(c_test_con,c_test_dum)
 
-#rm(c_indiv_test);rm(c_hhold_test);rm(c_test);rm(c_test_cat);rm(c_test_con);rm(c_test_dum)
+rm(c_indiv_test);rm(c_hhold_test);rm(c_test);rm(c_test_cat);rm(c_test_con);rm(c_test_dum)
 
 # RandomForest Model building ----------------------------------------------------------
 set.seed(1234)

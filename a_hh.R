@@ -268,3 +268,10 @@ A_subm<-data.frame(id=a_hhold_test$id,country=a_hhold_test$country,poor=pred)
 write.csv(A_subm,'a_submit.csv',row.names = F)
 MultiLogLoss(pred,train_data$poor)
 head(test_data)
+
+
+
+
+final<-rbind(A_subm,B_subm,C_subm)
+tail(final)
+write.csv(final,'submission.csv',row.names = F)
